@@ -1,0 +1,60 @@
+# This workflow will do a clean install of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Main CI/CD
+
+on:
+  push:
+    branches: [ 05-cd-cd-correction ]
+  pull_request:
+    branches: [ 05-cd-cd-correction ]
+
+jobs:
+  # CI part
+  test:
+    runs-on: ubuntu-latest
+    # Define `working-directory` if you application is in a subfolder
+    defaults:
+      run:
+        working-directory: modules/04.continuous-testing/lab
+    # Service containers to run with `runner-job`
+    services:
+      # Label used to access the service container
+      redis:
+        # Docker Hub image
+        image: redis:latest
+        ports:
+          # Opens tcp port 6379 on the host and service container
+          - 6379:6379
+    strategy:
+      matrix:
+        node-version: [16.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test
+  # CD part
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deployment
+        # RENDER_DEPLOY_HOOK_URL has to be set in the github secrets of the
+        # repository. This variable is define on the Render website.
+        run: |
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            echo "Secret RENDER_DEPLOY_HOOK_URL not found."
+            exit 1
+          fi
+          curl -sSL "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
