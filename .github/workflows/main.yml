@@ -5,9 +5,9 @@ name: Main CI/CD
 
 on:
   push:
-    branches: [ 05-cd-cd-correction ]
+    branches: [ 05-ci-cd-correction ]
   pull_request:
-    branches: [ 05-cd-cd-correction ]
+    branches: [ 05-ci-cd-correction ]
 
 jobs:
   # CI part
