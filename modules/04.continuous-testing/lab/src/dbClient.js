@@ -10,10 +10,16 @@ const db = process.env.REDIS_URL
       url: `redis://${config.redis.host}:${config.redis.port}`
     });
 
-db.on("error", (err) => console.error("Redis error :", err));
+db.on("error", (err) => {
+  console.error("Redis error :", err);
+    process.exit(1);
+});
 
 if (typeof db.connect === 'function') {
-  db.connect().catch(console.error);
+  db.connect().catch((err) => {
+    console.error("Failed to connect to Redis:", err);
+    process.exit(1);
+  });
 }
 
 process.on('SIGINT', function () {
