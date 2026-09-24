@@ -41,3 +41,11 @@ jobs:
       env:
         REDIS_HOST: 127.0.0.1
         REDIS_PORT: 6379
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/lab5' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Render
+        run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
